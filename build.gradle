@@ -44,6 +44,6 @@ dependencies {
     implementation "org.koin:koin-core-ext:$koin_version"
     testImplementation "org.koin:koin-test:$koin_version"
 
-    implementation 'org.litote.kmongo:kmongo:3.10.1'
+    implementation 'org.litote.kmongo:kmongo-native:3.10.1'
 
 }

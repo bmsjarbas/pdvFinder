@@ -17,26 +17,46 @@ fun Route.pdvRoute(){
     get("/pdv/{id}"){
         val pdvId  = call.parameters["id"]!!.toInt()
         val pdv = pdvService.retrieveBy(pdvId)
+        call.respond( pdv ?: HttpStatusCode.NotFound)
+    }
 
-        call.respond( pdv ?: "not found")
+    get("/pdv/near/{lon}/{lat}"){
+        val longitude  = call.parameters["lon"]!!.toDouble()
+        val latitude  = call.parameters["lat"]!!.toDouble()
+
+        val pdv = pdvService.getNearPdvs(longitude, latitude)
+        call.respond( pdv ?: HttpStatusCode.NotFound)
     }
 
     post("/pdv") {
-        val newPdvRequestData = call.receive<NewPdvRequestData>()
+        val newPdvRequestData = call.receive<PdvData>()
         pdvService.create(newPdvRequestData)
-        call.respond(HttpStatusCode.Created, "")
+
+        call.respond(HttpStatusCode.Created)
     }
 
 }
 
-data class NewPdvRequestData(
+data class PdvData(
     val id: Int,
     val tradingName: String,
     val ownerName: String,
     val document: String,
-    val address: GeoJsonModelBase<Array<Double>>,
-    val coverageArea : GeoJsonModelBase<Array<Array<Array<Array<Double>>>>>
+    val address: Address,
+    val coverageArea : CoverageArea
 )
 
-data class GeoJsonModelBase<TCoordinates>(val type: String, val coordinates: TCoordinates)
+class Address(type: String, coordinates: Array<Double>) : GeoJsonModelBase<Array<Double>>(type, coordinates)
+{
+    constructor() : this("", emptyArray())
+}
+class CoverageArea(type: String, coordinates:Array<Array<Array<Array<Double>>>>)
+    : GeoJsonModelBase<Array<Array<Array<Array<Double>>>>>(type, coordinates)
+{
+    constructor() : this("", emptyArray())
+}
+
+open class GeoJsonModelBase<TCoordinates>(val type: String, val coordinates: TCoordinates)
+{
+}
 
