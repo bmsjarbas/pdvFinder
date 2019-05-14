@@ -8,10 +8,12 @@ import io.ktor.http.*
 import io.ktor.auth.*
 import com.fasterxml.jackson.databind.*
 import com.zxventures.dao.PdvCollection
+import com.zxventures.service.PdvManager
 import com.zxventures.service.PdvService
 import io.ktor.jackson.*
 import org.litote.kmongo.KMongo
 import org.koin.dsl.module;
+import org.koin.experimental.builder.singleBy
 import org.koin.ktor.ext.Koin
 
 
@@ -39,14 +41,18 @@ fun Application.module(testing: Boolean = false) {
             enable(SerializationFeature.INDENT_OUTPUT)
         }
     }
-    install(Koin){
-        modules(pdvAppModules)
+
+
+    if(!testing) {
+        install(Koin) {
+            modules(pdvAppModules)
+        }
     }
 
 
-    routing {
 
-      pdvRoute()
+    routing {
+        pdvRoute()
 
         install(StatusPages) {
             exception<AuthenticationException> { cause ->
@@ -66,5 +72,6 @@ class AuthorizationException : RuntimeException()
 val pdvAppModules = module {
     single { KMongo.createClient().getDatabase("pdvFinder") }
     single { PdvCollection(get()) }
-    single { PdvService(get()) }
+    singleBy<PdvService, PdvManager>()
 }
+
